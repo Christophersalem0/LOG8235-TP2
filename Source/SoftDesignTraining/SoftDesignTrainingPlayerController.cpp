@@ -89,30 +89,22 @@ void ASoftDesignTrainingPlayerController::MoveCharacter()
     FHitResult Hit;
     if (GetHitResultUnderCursor(ECC_WorldStatic, false, Hit) && Hit.bBlockingHit)
     {
-        if (m_CanMoveCharacter) {
-            FVector location = Hit.ImpactPoint;
-            DrawDebugLine(GetWorld(), GetCharacter()->GetActorLocation(), location, FColor::Red, true);
-            UAIBlueprintHelperLibrary::SimpleMoveToLocation(this, location);
+        if (m_CanMoveCharacter)
+        {
+            FVector TargetLocation = Hit.ImpactPoint;
+
+            APawn* pawn = GetPawn();
+            if (pawn && FVector::Dist(pawn->GetActorLocation(), TargetLocation) < 50.f)
+            {
+                return;
+            }
+
+            UAIBlueprintHelperLibrary::SimpleMoveToLocation(this, TargetLocation);
         }
     }
-
 }
 
-void ASoftDesignTrainingPlayerController::SimpleClientNavMove(const FVector& Destination)
-{
-    if (m_PathFollowingComponent == nullptr)
-    {
-        m_PathFollowingComponent = CreateDefaultSubobject<USDTPathFollowingComponent>(TEXT("PathFollowingComponent"));
-    }
 
-    if (!m_PathFollowingComponent->IsPathFollowingAllowed())
-    {
-        // After a client respawn we need to reinitialize the path following component
-        // The default code path that sorts this out only fires on the server after a Possess
-        m_PathFollowingComponent->Initialize();
-    }
-    UAIBlueprintHelperLibrary::SimpleMoveToLocation(this, Destination);
-}
 
 void ASoftDesignTrainingPlayerController::Activate()
 {
@@ -162,4 +154,36 @@ void ASoftDesignTrainingPlayerController::Deactivate()
     {
         m_BoatOperatorActivated->Deactivate();
     }
+}
+
+
+void ASoftDesignTrainingPlayerController::Tick(float DeltaTime)
+{
+    Super::Tick(DeltaTime);
+
+    if (!m_PathFollowingComponent)
+        return;
+
+    FNavPathSharedPtr NavPath = m_PathFollowingComponent->GetPath();
+    if (!NavPath.IsValid())
+        return;
+
+    const TArray<FNavPathPoint>& Points = NavPath->GetPathPoints();
+    if (Points.Num() == 0)
+        return;
+
+    APawn* pawn = GetPawn();
+    if (!pawn)
+        return;
+
+    float Distance = FVector::Dist(pawn->GetActorLocation(), Points.Last().Location);
+    if (Distance < 50.f)
+        return;
+
+    for (int32 i = 0; i < Points.Num() - 1; ++i)
+    {
+        DrawDebugLine(GetWorld(), Points[i].Location, Points[i + 1].Location, FColor::Red, false, 0.1f, 0, 5.f);
+        DrawDebugSphere(GetWorld(), Points[i].Location, 20.f, 8, FColor::Blue, false, 0.1f);
+    }
+    DrawDebugSphere(GetWorld(), Points.Last().Location, 20.f, 8, FColor::Blue, false, 0.1f);
 }

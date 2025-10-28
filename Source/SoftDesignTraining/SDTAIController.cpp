@@ -23,6 +23,8 @@ void ASDTAIController::GoToBestTarget(float deltaTime)
 {
     //Move to target depending on current behavior
     APawn* pawn = GetPawn();
+    m_ReachedTarget = false;
+
 
     UPathFollowingComponent* path = GetPathFollowingComponent();
     if (path == nullptr)
@@ -117,21 +119,36 @@ void ASDTAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFollow
 }
 
 void ASDTAIController::ShowNavigationPath()
-{
+{    
     // Show current navigation path DrawDebugLine and DrawDebugSphere
     // Use the UPathFollowingComponent of the AIController to get the path
     // This function is called while m_ReachedTarget is false 
     // Check void ASDTBaseAIController::Tick for how it works.
-    if (GetPathFollowingComponent())
+    UPathFollowingComponent* PathComp = GetPathFollowingComponent();
+    if (!PathComp)
+        return;
+
+    FNavPathSharedPtr NavPath = PathComp->GetPath();
+    if (!NavPath.IsValid())
+        return;
+
+    const TArray<FNavPathPoint>& Points = NavPath->GetPathPoints();
+    if (Points.Num() == 0)
+        return;
+
+    const float SphereRadius = 15.0f;
+    const int32 SphereSegments = 16;
+    const float LineThickness = 8.0f;
+
+    for (int32 i = 0; i < Points.Num() - 1; ++i)
     {
-        TArray<FNavPathPoint> points = GetPathFollowingComponent()->GetPath()->GetPathPoints();
-        for (int i = 0; i < points.Num() - 1; i++) {
-            DrawDebugLine(GetWorld(), points[i].Location, points[i + 1].Location, FColor::Red);
-            DrawDebugSphere(GetWorld(), points[i].Location, 50, 100, FColor::Blue);
-        }
-        DrawDebugSphere(GetWorld(), points[points.Num() - 1].Location, 50, 100, FColor::Blue);
+        DrawDebugLine(GetWorld(), Points[i].Location, Points[i + 1].Location, FColor::Red, false, 0.0f, 0, LineThickness);
+        DrawDebugSphere(GetWorld(), Points[i].Location, SphereRadius, SphereSegments, FColor::Blue, false, 0.0f);
     }
+
+    DrawDebugSphere(GetWorld(), Points.Last().Location, SphereRadius, SphereSegments, FColor::Blue, false, 0.0f);
 }
+
 
 void ASDTAIController::AIStateInterrupted()
 {

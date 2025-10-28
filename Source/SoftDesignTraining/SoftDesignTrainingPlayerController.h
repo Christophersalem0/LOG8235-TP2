@@ -29,7 +29,8 @@ protected:
 
     void Activate();
     void Deactivate();
-    void SimpleClientNavMove(const FVector& Destination);
+    virtual void Tick(float DeltaTime) override;
+
 
 protected:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Navigation, meta = (AllowPrivateAccess = "true"))
