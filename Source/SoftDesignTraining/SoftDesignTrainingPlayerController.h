@@ -29,6 +29,7 @@ protected:
 
     void Activate();
     void Deactivate();
+    void SimpleClientNavMove(const FVector& Destination);
 
 protected:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Navigation, meta = (AllowPrivateAccess = "true"))

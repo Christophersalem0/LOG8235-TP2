@@ -5,6 +5,7 @@
 #include "SoftDesignTrainingMainCharacter.h"
 #include "DrawDebugHelpers.h"
 #include "Engine/World.h"
+#include "NavigationSystem.h"
 
 /*static*/ bool SDTUtils::Raycast(UWorld* uWorld, FVector sourcePoint, FVector targetPoint)
 {
@@ -29,4 +30,12 @@ bool SDTUtils::IsPlayerPoweredUp(UWorld * uWorld)
         return false;
 
     return false; // castedPlayerCharacter->IsPoweredUp();
+}
+
+bool SDTUtils::RaycastNavMesh(UWorld* uWorld, FVector sourcePoint, FVector targetPoint)
+{
+    FVector hitLocation;
+    UNavigationSystemV1::NavigationRaycast(uWorld, sourcePoint, targetPoint, hitLocation);
+
+    return (hitLocation - targetPoint).IsNearlyZero();
 }

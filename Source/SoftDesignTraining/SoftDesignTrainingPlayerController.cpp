@@ -86,6 +86,32 @@ void ASoftDesignTrainingPlayerController::MoveCharacter()
     // TODO : find the position of the mouse in the world 
     // And move the agent to this position IF possible
     // Validate you can move through m_CanMoveCharacter
+    FHitResult Hit;
+    if (GetHitResultUnderCursor(ECC_WorldStatic, false, Hit) && Hit.bBlockingHit)
+    {
+        if (m_CanMoveCharacter) {
+            FVector location = Hit.ImpactPoint;
+            DrawDebugLine(GetWorld(), GetCharacter()->GetActorLocation(), location, FColor::Red, true);
+            UAIBlueprintHelperLibrary::SimpleMoveToLocation(this, location);
+        }
+    }
+
+}
+
+void ASoftDesignTrainingPlayerController::SimpleClientNavMove(const FVector& Destination)
+{
+    if (m_PathFollowingComponent == nullptr)
+    {
+        m_PathFollowingComponent = CreateDefaultSubobject<USDTPathFollowingComponent>(TEXT("PathFollowingComponent"));
+    }
+
+    if (!m_PathFollowingComponent->IsPathFollowingAllowed())
+    {
+        // After a client respawn we need to reinitialize the path following component
+        // The default code path that sorts this out only fires on the server after a Possess
+        m_PathFollowingComponent->Initialize();
+    }
+    UAIBlueprintHelperLibrary::SimpleMoveToLocation(this, Destination);
 }
 
 void ASoftDesignTrainingPlayerController::Activate()
@@ -98,7 +124,7 @@ void ASoftDesignTrainingPlayerController::Activate()
 
     m_CanMoveCharacter = false;
     // TODO : Mouvement of the agent should be stopped !!
-
+    StopMovement();
     // Make an overlap to find what is near us to activate it
     TArray<FOverlapResult> results;
     GetWorld()->OverlapMultiByChannel(results, pawn->GetActorLocation(), pawn->GetActorRotation().Quaternion(), ECollisionChannel::ECC_WorldDynamic, FCollisionShape::MakeSphere(200.f));
