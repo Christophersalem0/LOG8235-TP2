@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "SDTPathFollowingComponent.h"
 #include "SoftDesignTraining.h"
@@ -7,6 +7,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "NavigationSystem.h"
 #include "NavLinkCustomInterface.h"
+#include "SoftDesignTrainingMainCharacter.h"
 
 #include "DrawDebugHelpers.h"
 
@@ -31,9 +32,9 @@ void USDTPathFollowingComponent::FollowPathSegment(float DeltaTime)
         const FVector& Location = points[i].Location;
         UE_LOG(LogTemp, Warning, TEXT("Point %d: X=%f Y=%f Z=%f"), i, Location.X, Location.Y, Location.Z);
     }
+    // If the current segment is a jump
     if (SDTUtils::HasJumpFlag(segmentStart))
     {
-        // Update jump along path / nav link proxy
     }
     else
     {
@@ -67,10 +68,14 @@ void USDTPathFollowingComponent::SetMoveSegment(int32 segmentStartIndex)
     const TArray<FNavPathPoint>& points = Path->GetPathPoints();
 
     const FNavPathPoint& segmentStart = points[MoveSegmentStartIndex];
+    const FNavPathPoint& segmentEnd = points[MoveSegmentStartIndex + 1];
+
 
     if (SDTUtils::HasJumpFlag(segmentStart) && FNavMeshNodeFlags(segmentStart.Flags).IsNavLink())
     {
         // Handle starting jump
+        
+
     }
     else
     {

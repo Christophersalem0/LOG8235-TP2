@@ -20,6 +20,9 @@ public:
     void MoveCameraRight(float value);
     void ZoomCamera(float value);
 
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Jump")
+    UCurveFloat* m_JumpCurve = nullptr;
+
 protected:
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))

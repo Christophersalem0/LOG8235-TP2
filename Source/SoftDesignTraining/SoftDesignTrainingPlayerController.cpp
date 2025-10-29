@@ -7,8 +7,11 @@
 #include "DrawDebugHelpers.h"
 #include "Blueprint/AIBlueprintHelperLibrary.h"
 #include "SDTBridge.h"
+#include "SDTPlayerNavigationFilter.h"
 #include "SDTBoatOperator.h"
 #include "Engine/OverlapResult.h"
+#include "NavigationSystem.h"
+#include "NavigationPath.h"
 
 ASoftDesignTrainingPlayerController::ASoftDesignTrainingPlayerController()
 {
@@ -99,7 +102,19 @@ void ASoftDesignTrainingPlayerController::MoveCharacter()
                 return;
             }
 
-            UAIBlueprintHelperLibrary::SimpleMoveToLocation(this, TargetLocation);
+            //UAIBlueprintHelperLibrary::SimpleMoveToLocation(this, TargetLocation);
+
+            UNavigationPath* path = UNavigationSystemV1::FindPathToLocationSynchronously
+            (
+                GetWorld(),
+                pawn->GetActorLocation(),
+                TargetLocation,
+                this,
+                USDTPlayerNavigationFilter::StaticClass()
+            );
+
+
+            m_PathFollowingComponent->RequestMove(FAIMoveRequest(TargetLocation), path->GetPath());
         }
     }
 }

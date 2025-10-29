@@ -23,4 +23,13 @@ public:
 
     UPROPERTY(BlueprintReadOnly)
     bool isJumping{ false };
+
+    /// During a jump segment, the time elapsed since the beginning of the jump.
+    float TimeOnCurve = 0.0f;
+    /// The time at which the FCurveFloat starts.
+    double MinTimeCurve = 0.0;
+    /// The time at which the FCurveFloat ends.
+    double MaxTimeCurve = 0.0;
+    /// Indicates the position in 2D along the start and end segment during the jump.
+    FVector2D JumpVector2D = FVector2D::ZeroVector;
 };
