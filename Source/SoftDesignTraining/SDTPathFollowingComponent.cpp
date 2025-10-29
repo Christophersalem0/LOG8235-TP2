@@ -25,16 +25,29 @@ void USDTPathFollowingComponent::FollowPathSegment(float DeltaTime)
     const TArray<FNavPathPoint>& points = Path->GetPathPoints();
     const FNavPathPoint& segmentStart = points[MoveSegmentStartIndex];
     const FNavPathPoint& segmentEnd = points[MoveSegmentEndIndex];
-    UE_LOG(LogTemp, Warning, TEXT("Path has %d points"), points.Num());
+    //UE_LOG(LogTemp, Warning, TEXT("Path has %d points"), points.Num());
 
     for (int32 i = 0; i < points.Num(); i++)
     {
         const FVector& Location = points[i].Location;
-        UE_LOG(LogTemp, Warning, TEXT("Point %d: X=%f Y=%f Z=%f"), i, Location.X, Location.Y, Location.Z);
+        //UE_LOG(LogTemp, Warning, TEXT("Point %d: X=%f Y=%f Z=%f"), i, Location.X, Location.Y, Location.Z);
     }
     // If the current segment is a jump
     if (SDTUtils::HasJumpFlag(segmentStart))
     {
+        APlayerController* PC = Cast<APlayerController>(GetOwner());
+        if (!PC)
+            return;
+
+        ASoftDesignTrainingMainCharacter* PawnChar = Cast<ASoftDesignTrainingMainCharacter>(PC->GetPawn());
+        if (!PawnChar)
+            return;
+
+
+        if (PawnChar->m_JumpCurve)
+        {
+            UE_LOG(LogTemp, Warning, TEXT("curve working"));
+        }
     }
     else
     {
@@ -50,7 +63,7 @@ void USDTPathFollowingComponent::FollowPathSegment(float DeltaTime)
             destination = projectedPosition + ((lineEnd - projectedPosition) / 2);
         }
 
-        UE_LOG(LogTemp, Warning, TEXT("Destination: X=%f Y=%f Z=%f"), destination.X, destination.Y, destination.Z);
+        //UE_LOG(LogTemp, Warning, TEXT("Destination: X=%f Y=%f Z=%f"), destination.X, destination.Y, destination.Z);
         FVector MoveVelocity = (destination - currentLocation) / DeltaTime;
         NavMovementInterface->RequestDirectMove(MoveVelocity, false);
         
@@ -73,8 +86,12 @@ void USDTPathFollowingComponent::SetMoveSegment(int32 segmentStartIndex)
 
     if (SDTUtils::HasJumpFlag(segmentStart) && FNavMeshNodeFlags(segmentStart.Flags).IsNavLink())
     {
-        // Handle starting jump
-        
+        APlayerController* PC = Cast<APlayerController>(GetOwner());
+        ASoftDesignTrainingMainCharacter* PawnChar = Cast<ASoftDesignTrainingMainCharacter>(PC->GetPawn());
+
+        const FVector JumpDirection = (segmentEnd.Location - segmentStart.Location).GetSafeNormal();
+        FRotator DesiredRotation = JumpDirection.Rotation();
+        PawnChar->SetActorRotation(DesiredRotation);
 
     }
     else

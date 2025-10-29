@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "SDTNavArea_Jump.h"
 #include "SDTPlayerNavigationFilter.h"
+#include "SDTNavArea_Jump.h"
 #include "SoftDesignTraining.h"
 #include "NavAreas/NavArea_Default.h"
 
