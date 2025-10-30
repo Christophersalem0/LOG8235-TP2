@@ -27,11 +27,7 @@ void USDTPathFollowingComponent::FollowPathSegment(float DeltaTime)
     const FNavPathPoint& segmentEnd = points[MoveSegmentEndIndex];
     //UE_LOG(LogTemp, Warning, TEXT("Path has %d points"), points.Num());
 
-    for (int32 i = 0; i < points.Num(); i++)
-    {
-        const FVector& Location = points[i].Location;
-        //UE_LOG(LogTemp, Warning, TEXT("Point %d: X=%f Y=%f Z=%f"), i, Location.X, Location.Y, Location.Z);
-    }
+
     // If the current segment is a jump
     if (SDTUtils::HasJumpFlag(segmentStart))
     {
@@ -46,26 +42,31 @@ void USDTPathFollowingComponent::FollowPathSegment(float DeltaTime)
 
         if (PawnChar->m_JumpCurve)
         {
-            UE_LOG(LogTemp, Warning, TEXT("curve working"));
+            UE_LOG(LogTemp, Warning, TEXT("Entered jump"));
+            const FRichCurve& CurveData = PawnChar->m_JumpCurve->FloatCurve;
+
+            const FRichCurveKey& FirstKey = CurveData.GetFirstKey();
+            const FRichCurveKey& LastKey = CurveData.GetLastKey();
+            const float jumpTime = LastKey.Time - FirstKey.Time;
+
+            remainingJumpTime += DeltaTime;
+            remainingJumpTime = FMath::Clamp(remainingJumpTime, FirstKey.Time, LastKey.Time);
+
+            
+            float ZCurveValue = PawnChar->m_JumpCurve->GetFloatValue(remainingJumpTime);
+            float ZOffset = ZCurveValue * 1000.f; 
+
+            const FVector displacement = ((segmentEnd.Location - segmentStart.Location) / jumpTime) * DeltaTime;
+
+            const FVector currentLocation = PawnChar->GetActorLocation();
+            PawnChar->SetActorLocation(FVector(currentLocation.X + displacement.X, currentLocation.Y + displacement.Y, ZOffset + zValue), true);
+         
         }
     }
     else
     {
         // Update navigation along path (move along)
-        FVector lineStart(segmentStart.Location);
-        FVector lineEnd(segmentEnd.Location);
-        FVector lineDirection = lineEnd - lineStart;
-        lineDirection.Normalize();
-        const FVector currentLocation = NavMovementInterface->GetFeetLocation();
-        FVector projectedPosition = FMath::ClosestPointOnLine(lineStart, lineEnd, currentLocation);
-        FVector destination = lineEnd;
-        if ((currentLocation - lineEnd).Size() > 1.f) {
-            destination = projectedPosition + ((lineEnd - projectedPosition) / 2);
-        }
-
-        //UE_LOG(LogTemp, Warning, TEXT("Destination: X=%f Y=%f Z=%f"), destination.X, destination.Y, destination.Z);
-        FVector MoveVelocity = (destination - currentLocation) / DeltaTime;
-        NavMovementInterface->RequestDirectMove(MoveVelocity, false);
+        Super::FollowPathSegment(DeltaTime);
         
     }
 }
@@ -93,57 +94,18 @@ void USDTPathFollowingComponent::SetMoveSegment(int32 segmentStartIndex)
         FRotator DesiredRotation = JumpDirection.Rotation();
         PawnChar->SetActorRotation(DesiredRotation);
 
+
+        // set le temps du jump
+        const FRichCurve& CurveData = PawnChar->m_JumpCurve->FloatCurve;
+        const FRichCurveKey& FirstKey = CurveData.GetFirstKey();
+        remainingJumpTime = FirstKey.Time;
+        zValue = PawnChar->GetActorLocation().Z;
+
     }
     else
     {
-        if (MoveSegmentEndIndex != Path->GetPathPoints().Num() - 1)
-        {
-            TArray<FVector> sampleShortcutPoints;
-
-            sampleShortcutPoints.Empty();
-            sampleShortcutPoints.Reserve(5);
-            FVector originBB = FVector::ZeroVector;
-            float radius = NavMovementInterface->GetNavAgentPropertiesRef().AgentRadius;
-            FVector extentsBB(0,0,radius);
-            FVector destination;
-            FVector2D destination2D;
-            FVector displacementSamples = (points[MoveSegmentEndIndex].Location - segmentStart.Location) / 5;
-            for (int i = 0; i < 5; i++)
-            {
-                FVector sample = segmentStart.Location + ((i + 1) * displacementSamples);
-                sampleShortcutPoints.Push(sample);
-            }
-            for (int i = 5 - 1; i >= 0; i--)
-            {
-                FVector start = NavMovementInterface->GetFeetLocation();
-                start.Z = originBB.Z;
-                FVector end = sampleShortcutPoints[i];
-                end.Z = originBB.Z;
-                FVector sideVectorLeft = FVector::CrossProduct((end - start), FVector::UpVector);
-                sideVectorLeft.Normalize();
-                sideVectorLeft *= extentsBB.Size();
-                FVector sideVectorRight = -sideVectorLeft;
-
-                FHitResult HitOut;
-                if (!SDTUtils::Raycast(GetWorld(),
-                    start + sideVectorLeft,	
-                    end + sideVectorLeft 
-                )
-                    &&
-                    !SDTUtils::Raycast(GetWorld(),
-                        start + sideVectorRight,
-                        end + sideVectorRight
-                    )
-                    )
-                {
-                    destination = sampleShortcutPoints[i];
-                    destination2D = FVector2D(sampleShortcutPoints[i]);
-                    if (destination.Equals(Path->GetPathPoints()[MoveSegmentEndIndex + 1]))
-                        MoveSegmentEndIndex++;
-                    break;
-                }
-            }
-        }
+        
+        
     }
 }
 

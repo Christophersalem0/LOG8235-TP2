@@ -29,7 +29,9 @@ void ASDTBoatAIController::GoToBestTarget(float deltaTime)
 			if (actor != nullptr)
 			{
 				// TODO : Agents wants to move towards actor
+				m_ReachedTarget = false;
 
+				MoveToActor(actor);
 				m_BoatState = BoatState::GO_TO_START_BRIDGE;
 			}
 
@@ -70,6 +72,9 @@ void ASDTBoatAIController::GoToBestTarget(float deltaTime)
 					// TODO : we want to move the agent towards the DropLocation of the boatOperator 
 					// Check ASDTBoatOperator::GetDropLocation to get the location.
 					// Note that m_ReachedTarget should be set to FALSE if the move is valid!
+					m_ReachedTarget = false;
+					
+					MoveToLocation(boatOperator->GetDropLocation());
 
 					break;
 				}
@@ -104,6 +109,8 @@ void ASDTBoatAIController::GoToBestTarget(float deltaTime)
 				if (actor != nullptr)
 				{
 					// TODO : Agents wants to move towards actor
+					m_ReachedTarget = false;
+					MoveToActor(actor);
 				}
 			}
 
@@ -134,6 +141,8 @@ void ASDTBoatAIController::NotifyUnloadComplete()
 	if (actor != nullptr)
 	{
 		// TODO : Agents wants to move towards actor
+		m_ReachedTarget = false;
+		MoveToActor(actor);
 	}
 }
 
@@ -143,6 +152,30 @@ void ASDTBoatAIController::ShowNavigationPath()
 	// Use the UPathFollowingComponent of the AIController to get the path
 	// This function is called while m_ReachedTarget is false 
 	// Check void ASDTBaseAIController::Tick for how it works.
+
+	UPathFollowingComponent* PathComp = GetPathFollowingComponent();
+	if (!PathComp)
+		return;
+
+	FNavPathSharedPtr NavPath = PathComp->GetPath();
+	if (!NavPath.IsValid())
+		return;
+
+	const TArray<FNavPathPoint>& Points = NavPath->GetPathPoints();
+	if (Points.Num() == 0)
+		return;
+
+	const float SphereRadius = 15.0f;
+	const int32 SphereSegments = 16;
+	const float LineThickness = 8.0f;
+
+	for (int32 i = 0; i < Points.Num() - 1; ++i)
+	{
+		DrawDebugLine(GetWorld(), Points[i].Location, Points[i + 1].Location, FColor::Red, false, 0.0f, 0, LineThickness);
+		DrawDebugSphere(GetWorld(), Points[i].Location, SphereRadius, SphereSegments, FColor::Blue, false, 0.0f);
+	}
+
+	DrawDebugSphere(GetWorld(), Points.Last().Location, SphereRadius, SphereSegments, FColor::Blue, false, 0.0f);
 }
 
 BoatState ASDTBoatAIController::GetBoatState()

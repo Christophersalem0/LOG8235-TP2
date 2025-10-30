@@ -24,7 +24,7 @@ public:
 protected:
     AActor* FindActorWithTag(FString actorTag, bool appendTag = true);
 
-    bool m_ReachedTarget;
+    bool m_ReachedTarget = true;
     FString m_TagToLookFor;
 
 private:

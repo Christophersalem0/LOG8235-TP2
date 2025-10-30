@@ -23,7 +23,6 @@ void ASDTAIController::GoToBestTarget(float deltaTime)
 {
     //Move to target depending on current behavior
     APawn* pawn = GetPawn();
-    m_ReachedTarget = false;
 
 
     UPathFollowingComponent* path = GetPathFollowingComponent();
@@ -38,10 +37,11 @@ void ASDTAIController::GoToBestTarget(float deltaTime)
         {
             FString tag("WaitPoint_Bridge_");
             AActor* actor = FindActorWithTag(tag);
-            
+
             if (actor != nullptr)
             {
                 // TODO : Agents wants to move towards actor
+                m_ReachedTarget = false;
                 MoveToActor(actor);
                 m_PedestrianState = PedestrianState::GO_TO_BRIDGE;
             }
@@ -58,7 +58,6 @@ void ASDTAIController::GoToBestTarget(float deltaTime)
             FString tag("Bridge_");
             AActor* actor = FindActorWithTag(tag);
             ASDTBridge* bridge = Cast<ASDTBridge>(actor);
-            
             // Once the bridge is down, we go through
             if (bridge != nullptr && bridge->GetState() == EBridgeState::BRIDGE_DOWN)
             {
@@ -71,10 +70,10 @@ void ASDTAIController::GoToBestTarget(float deltaTime)
         {
             FString tag("Despawn_");
             AActor* actor = FindActorWithTag(tag);
-            
             if (actor != nullptr)
             {
                 // TODO : Agents wants to move towards actor
+                m_ReachedTarget = false;
                 MoveToActor(actor);
             }
             
@@ -90,6 +89,45 @@ void ASDTAIController::GoToBestTarget(float deltaTime)
         }
     }
 }
+
+void ASDTAIController::VerifyStillReachable() {
+    switch (m_PedestrianState)
+    {
+        case PedestrianState::GO_TO_DESPAWN:
+        {
+            APawn* pawn = GetPawn();
+            
+            FString bridgeTag("Bridge_");
+            AActor* bridgeActor = FindActorWithTag(bridgeTag);
+            ASDTBridge* bridge = Cast<ASDTBridge>(bridgeActor);
+
+            FString afterTag("After_Bridge_");
+            AActor* afterActor = FindActorWithTag(afterTag);
+
+            FString beforeTag("WaitPoint_Bridge_");
+            AActor* beforeActor = FindActorWithTag(beforeTag);
+
+            if (bridge->GetState() != EBridgeState::BRIDGE_DOWN){
+                float distanceAfter = (pawn->GetActorLocation() - afterActor->GetActorLocation()).Size();
+                float distanceBefore = (pawn->GetActorLocation() - beforeActor->GetActorLocation()).Size();
+
+                if (distanceAfter > distanceBefore) {
+                    m_PedestrianState = PedestrianState::SPAWNED;
+                    m_ReachedTarget = true;
+                } 
+            }
+            break;
+        }
+
+    }
+}
+
+void ASDTAIController::Tick(float deltaTime)
+{
+    Super::Tick(deltaTime);
+    VerifyStillReachable();
+}
+
 
 void ASDTAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result)
 {
@@ -153,6 +191,6 @@ void ASDTAIController::ShowNavigationPath()
 void ASDTAIController::AIStateInterrupted()
 {
     StopMovement();
-
+    UE_LOG(LogTemp, Warning, TEXT("Interrupt"));
     m_ReachedTarget = false;
 }

@@ -24,10 +24,7 @@ public:
     UPROPERTY(BlueprintReadOnly)
     bool isJumping{ false };
 
-    float JumpDuration = 1.0f;     
-    float JumpElapsedTime = 0.0f;   
-    bool bIsJumping = false;        
-    FVector JumpStartLocation;
-    FVector JumpEndLocation;
+    float remainingJumpTime;
+    float zValue;
 
 };

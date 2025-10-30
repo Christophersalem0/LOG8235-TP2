@@ -6,7 +6,7 @@
 // Sets default values
 ASDTBridge::ASDTBridge()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 }
 
@@ -14,7 +14,7 @@ ASDTBridge::ASDTBridge()
 void ASDTBridge::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
 	m_State = EBridgeState::BRIDGE_UP;
 	m_IsMoving = false;
 	m_BridgeOpeningAlpha = 1.0f;

@@ -142,6 +142,8 @@ void ASoftDesignTrainingPlayerController::Activate()
         ASDTBridge* bridge = Cast<ASDTBridge>(actor);
         if (bridge)
         {
+            
+
             bridge->Activate();
             m_BridgeActivated = bridge;
             break;

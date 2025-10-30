@@ -37,11 +37,12 @@ public:
 public:
     virtual void OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result) override;
     void AIStateInterrupted();
+    void VerifyStillReachable();
+    virtual void Tick(float deltaTime) override;
 
 
 private:
     virtual void GoToBestTarget(float deltaTime) override;
     virtual void ShowNavigationPath() override;
-
     PedestrianState m_PedestrianState{ PedestrianState::SPAWNED };
 };
