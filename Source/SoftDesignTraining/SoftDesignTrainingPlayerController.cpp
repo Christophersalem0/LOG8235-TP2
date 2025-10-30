@@ -7,11 +7,15 @@
 #include "DrawDebugHelpers.h"
 #include "Blueprint/AIBlueprintHelperLibrary.h"
 #include "SDTBridge.h"
-#include "SDTPlayerNavigationFilter.h"
+#include "SDTPlayerNavFilter.h"
 #include "SDTBoatOperator.h"
 #include "Engine/OverlapResult.h"
 #include "NavigationSystem.h"
 #include "NavigationPath.h"
+#include "SDTBoat.h"
+#include "SDTBoatAIController.h"
+#include "Components/TextRenderComponent.h"
+
 
 ASoftDesignTrainingPlayerController::ASoftDesignTrainingPlayerController()
 {
@@ -110,7 +114,7 @@ void ASoftDesignTrainingPlayerController::MoveCharacter()
                 pawn->GetActorLocation(),
                 TargetLocation,
                 this,
-                USDTPlayerNavigationFilter::StaticClass()
+                USDTPlayerNavFilter::StaticClass()
             );
 
 
@@ -142,11 +146,11 @@ void ASoftDesignTrainingPlayerController::Activate()
         ASDTBridge* bridge = Cast<ASDTBridge>(actor);
         if (bridge)
         {
-            
-
-            bridge->Activate();
-            m_BridgeActivated = bridge;
+            if (bridge->Activate()) {
+                m_BridgeActivated = bridge;
+            }
             break;
+
         }
 
         ASDTBoatOperator* boatOperator = Cast<ASDTBoatOperator>(actor);

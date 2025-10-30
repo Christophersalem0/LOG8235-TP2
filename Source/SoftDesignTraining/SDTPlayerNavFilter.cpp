@@ -1,13 +1,11 @@
 // Fill out your copyright notice in the Description page of Project Settings.
-
-#include "SDTPlayerNavigationFilter.h"
+#include "SDTPlayerNavFilter.h"
 #include "SDTNavArea_Jump.h"
 #include "SoftDesignTraining.h"
 #include "NavAreas/NavArea_Default.h"
 
-#include "SDTUtils.h"
 
-USDTPlayerNavigationFilter::USDTPlayerNavigationFilter(const FObjectInitializer& ObjectInitializer)
+USDTPlayerNavFilter::USDTPlayerNavFilter(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
 {
     TSubclassOf<UNavArea_Default> ZoneDefault = TSubclassOf<UNavArea_Default>(UNavArea_Default::StaticClass());

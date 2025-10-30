@@ -183,6 +183,12 @@ BoatState ASDTBoatAIController::GetBoatState()
 	return m_BoatState;
 }
 
+bool ASDTBoatAIController::GetReachedTarget()
+{
+	return m_ReachedTarget;
+}
+
+
 void ASDTBoatAIController::AIStateInterrupted()
 {
 	StopMovement();

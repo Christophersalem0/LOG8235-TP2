@@ -28,11 +28,10 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	void Activate();
+	bool Activate();
 	void Deactivate();
 
 	EBridgeState GetState() const;
-
 protected:
 	EBridgeState m_State;
 	bool m_IsMoving;
@@ -42,4 +41,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bridge")
 	float m_BridgeOpenningSpeed;
+
+private:
+	void VerifyIncomingBoats();
+
+	bool m_CanActivate;
 };

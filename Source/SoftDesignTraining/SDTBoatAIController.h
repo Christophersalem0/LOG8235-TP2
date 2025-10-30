@@ -35,6 +35,7 @@ public:
     void AIStateInterrupted();
 
     BoatState GetBoatState();
+    bool GetReachedTarget();
 
 private:
     virtual void GoToBestTarget(float deltaTime) override;
