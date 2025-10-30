@@ -26,11 +26,14 @@ void USDTPathFollowingComponent::FollowPathSegment(float DeltaTime)
     const FNavPathPoint& segmentStart = points[MoveSegmentStartIndex];
     const FNavPathPoint& segmentEnd = points[MoveSegmentEndIndex];
     //UE_LOG(LogTemp, Warning, TEXT("Path has %d points"), points.Num());
+    isJumping = false;
 
 
     // If the current segment is a jump
     if (SDTUtils::HasJumpFlag(segmentStart))
     {
+        isJumping = true;
+
         APlayerController* PC = Cast<APlayerController>(GetOwner());
         if (!PC)
             return;
@@ -42,7 +45,6 @@ void USDTPathFollowingComponent::FollowPathSegment(float DeltaTime)
 
         if (PawnChar->m_JumpCurve)
         {
-            UE_LOG(LogTemp, Warning, TEXT("Entered jump"));
             const FRichCurve& CurveData = PawnChar->m_JumpCurve->FloatCurve;
 
             const FRichCurveKey& FirstKey = CurveData.GetFirstKey();
@@ -60,7 +62,7 @@ void USDTPathFollowingComponent::FollowPathSegment(float DeltaTime)
 
             const FVector currentLocation = PawnChar->GetActorLocation();
             PawnChar->SetActorLocation(FVector(currentLocation.X + displacement.X, currentLocation.Y + displacement.Y, ZOffset + zValue), true);
-         
+            jumpProgress = FMath::Abs(remainingJumpTime / jumpTime);
         }
     }
     else
@@ -80,13 +82,15 @@ void USDTPathFollowingComponent::SetMoveSegment(int32 segmentStartIndex)
     Super::SetMoveSegment(segmentStartIndex);
 
     const TArray<FNavPathPoint>& points = Path->GetPathPoints();
-
+    isJumping = false;
+    jumpProgress = 0;
     const FNavPathPoint& segmentStart = points[MoveSegmentStartIndex];
     const FNavPathPoint& segmentEnd = points[MoveSegmentStartIndex + 1];
 
 
     if (SDTUtils::HasJumpFlag(segmentStart) && FNavMeshNodeFlags(segmentStart.Flags).IsNavLink())
     {
+        isJumping = true;
         APlayerController* PC = Cast<APlayerController>(GetOwner());
         ASoftDesignTrainingMainCharacter* PawnChar = Cast<ASoftDesignTrainingMainCharacter>(PC->GetPawn());
 
@@ -100,6 +104,7 @@ void USDTPathFollowingComponent::SetMoveSegment(int32 segmentStartIndex)
         const FRichCurveKey& FirstKey = CurveData.GetFirstKey();
         remainingJumpTime = FirstKey.Time;
         zValue = PawnChar->GetActorLocation().Z;
+        jumpProgress = 0;
 
     }
     else

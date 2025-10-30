@@ -169,13 +169,13 @@ void ASDTBoatAIController::ShowNavigationPath()
 	const int32 SphereSegments = 16;
 	const float LineThickness = 8.0f;
 
+
 	for (int32 i = 0; i < Points.Num() - 1; ++i)
 	{
-		DrawDebugLine(GetWorld(), Points[i].Location, Points[i + 1].Location, FColor::Red, false, 0.0f, 0, LineThickness);
-		DrawDebugSphere(GetWorld(), Points[i].Location, SphereRadius, SphereSegments, FColor::Blue, false, 0.0f);
+		DrawDebugLine(GetWorld(), Points[i].Location, Points[i + 1].Location, FColor::Red, false, 0.1f, 0, 20.f);
+		DrawDebugSphere(GetWorld(), Points[i].Location, 20.f, 32, FColor::Red, false, 0.1f, 0, 1.f);
 	}
-
-	DrawDebugSphere(GetWorld(), Points.Last().Location, SphereRadius, SphereSegments, FColor::Blue, false, 0.0f);
+	DrawDebugSphere(GetWorld(), Points.Last(), 20.f, 32, FColor::Red, false, 0.1f, 0, 1.f);
 }
 
 BoatState ASDTBoatAIController::GetBoatState()

@@ -203,8 +203,9 @@ void ASoftDesignTrainingPlayerController::Tick(float DeltaTime)
 
     for (int32 i = 0; i < Points.Num() - 1; ++i)
     {
-        DrawDebugLine(GetWorld(), Points[i].Location, Points[i + 1].Location, FColor::Red, false, 0.1f, 0, 5.f);
-        DrawDebugSphere(GetWorld(), Points[i].Location, 20.f, 8, FColor::Blue, false, 0.1f);
+        DrawDebugLine(GetWorld(), Points[i].Location, Points[i + 1].Location, FColor::Yellow, false, 0.1f, 0, 20.f);
+        DrawDebugSphere(GetWorld(),Points[i].Location,20.f, 32,FColor::Yellow,false,0.1f,0,1.f);
     }
-    DrawDebugSphere(GetWorld(), Points.Last().Location, 20.f, 8, FColor::Blue, false, 0.1f);
+    DrawDebugSphere(GetWorld(), Points.Last(), 20.f, 32, FColor::Yellow, false, 0.1f, 0, 1.f);
+
 }

@@ -9,7 +9,7 @@
 /**
 *
 */
-UCLASS(ClassGroup = AI, config = Game)
+UCLASS(ClassGroup = AI, config = Game, Blueprintable)
 class SOFTDESIGNTRAINING_API USDTPathFollowingComponent : public UPathFollowingComponent
 {
     GENERATED_UCLASS_BODY()
@@ -19,10 +19,10 @@ public:
     virtual void SetMoveSegment(int32 segmentStartIndex) override;
 
     UPROPERTY(BlueprintReadOnly)
-    float jumProgress{ 0.f };
+    float jumpProgress = 0.f;
 
     UPROPERTY(BlueprintReadOnly)
-    bool isJumping{ false };
+    bool isJumping = false;
 
     float remainingJumpTime;
     float zValue;

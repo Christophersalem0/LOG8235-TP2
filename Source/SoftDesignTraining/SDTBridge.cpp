@@ -32,7 +32,6 @@ void ASDTBridge::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	VerifyIncomingBoats();
-	UE_LOG(LogTemp, Log, TEXT("m_CanActivate: %d"), (m_CanActivate));
 	if (m_CanActivate) {
 		FString textTag = Tags[0].ToString() + "_Text";
 		TArray<UActorComponent*> Components = GetComponentsByTag(UTextRenderComponent::StaticClass(), *textTag);
@@ -58,15 +57,12 @@ void ASDTBridge::Tick(float DeltaTime)
 				if (MeshComp)
 				{
 					MeshComp->SetMaterial(0, NewMaterial);
-					UE_LOG(LogTemp, Log, TEXT("Changed material on: %s"), *MeshComp->GetName());
 				}
 			}
 		}
 	}
 	else {
-		UE_LOG(LogTemp, Log, TEXT("DISABLE"));
 		FString textTag = Tags[0].ToString() + "_Text";
-		UE_LOG(LogTemp, Log, TEXT("Tag: %s"), *textTag);
 		TArray<UActorComponent*> Components = GetComponentsByTag(UTextRenderComponent::StaticClass(), *textTag);
 		if (Components.Num() > 0) {
 			if (UTextRenderComponent* TextRender = Cast<UTextRenderComponent>(Components[0]))
@@ -90,7 +86,6 @@ void ASDTBridge::Tick(float DeltaTime)
 				if (MeshComp)
 				{
 					MeshComp->SetMaterial(0, NewMaterial);
-					UE_LOG(LogTemp, Log, TEXT("Changed material on: %s"), *MeshComp->GetName());
 				}
 			}
 		}
@@ -165,7 +160,6 @@ void ASDTBridge::VerifyIncomingBoats()
 		{
 			ASDTBoatAIController* boatController = Cast<ASDTBoatAIController>(boat->GetController());
 			//UE_LOG(LogTemp, Log, TEXT("GOTOPERATOR: %d"), boatController->GetBoatState() == BoatState::GO_TO_OPERATOR);
-			UE_LOG(LogTemp, Log, TEXT("distance: %f"), (GetActorLocation().Y - boat->GetActorLocation().Y));
 			if (GetActorLocation().Y - boat->GetActorLocation().Y < 400 && boatController->GetBoatState() == stateToCheck && !boatController->GetReachedTarget()) {
 				m_CanActivate = false;
 			}
