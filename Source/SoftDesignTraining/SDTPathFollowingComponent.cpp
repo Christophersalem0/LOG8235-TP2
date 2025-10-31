@@ -25,7 +25,6 @@ void USDTPathFollowingComponent::FollowPathSegment(float DeltaTime)
     const TArray<FNavPathPoint>& points = Path->GetPathPoints();
     const FNavPathPoint& segmentStart = points[MoveSegmentStartIndex];
     const FNavPathPoint& segmentEnd = points[MoveSegmentEndIndex];
-    //UE_LOG(LogTemp, Warning, TEXT("Path has %d points"), points.Num());
     isJumping = false;
 
 
@@ -101,7 +100,7 @@ void USDTPathFollowingComponent::FollowPathSegment(float DeltaTime)
 
         const bool isCloseToNextSegment = (currentLocation - lineEnd).Size() < 100;
         const bool isNotLastSeg = MoveSegmentEndIndex != Path->GetPathPoints().Num() - 1;
-        const bool secondVerif = isNotLastSeg && (FMath::Acos(FVector::DotProduct((points[MoveSegmentEndIndex + 1].Location - lineEnd).GetSafeNormal(), moveDirection)) + 1 ) / 2 < 0.5;
+        const bool secondVerif = isNotLastSeg && ((FVector::DotProduct((points[MoveSegmentEndIndex + 1].Location - lineEnd).GetSafeNormal(), moveDirection)) + 1 ) / 2 < 0.5;
 
         if (shouldDecelerate || secondVerif)
         {
@@ -134,10 +133,6 @@ void USDTPathFollowingComponent::SetMoveSegment(int32 segmentStartIndex)
         isWaitingJump = true;
         APlayerController* PC = Cast<APlayerController>(GetOwner());
         ASoftDesignTrainingMainCharacter* PawnChar = Cast<ASoftDesignTrainingMainCharacter>(PC->GetPawn());
-
-       /* const FVector JumpDirection = (segmentEnd.Location - segmentStart.Location).GetSafeNormal();
-        FRotator DesiredRotation = JumpDirection.Rotation();
-        PawnChar->SetActorRotation(DesiredRotation);*/
 
 
         const FRichCurve& CurveData = PawnChar->m_JumpCurve->FloatCurve;
