@@ -67,9 +67,45 @@ void USDTPathFollowingComponent::FollowPathSegment(float DeltaTime)
     }
     else
     {
-        // Update navigation along path (move along)
-        Super::FollowPathSegment(DeltaTime);
-        
+        //Super::FollowPathSegment(DeltaTime);
+        FVector lineStart(segmentStart.Location);
+        FVector lineEnd(segmentEnd.Location);
+        //FVector lineDirection = lineEnd - lineStart;
+        //lineDirection.Normalize();
+        const FVector currentLocation = NavMovementInterface->GetFeetLocation();
+
+        //const float maxSpeed = NavMovementInterface->GetMaxSpeedForNavMovement();
+        //const float currentSpeed = GetOwner()->GetVelocity().Size();
+
+        //FVector projectedPosition = FMath::ClosestPointOnLine(lineStart, lineEnd, currentLocation);
+        //FVector destination = lineEnd;
+        //if ((currentLocation - lineEnd).Size() > 1.f) {
+        //    destination = projectedPosition + ((lineEnd - projectedPosition) / 2);
+        //}
+
+        //FVector MoveVelocity = (destination - currentLocation).GetSafeNormal() * maxSpeed;
+        //NavMovementInterface->RequestDirectMove(MoveVelocity, false);
+
+     
+        FVector moveDirection = (lineEnd - currentLocation).GetSafeNormal();
+        const FVector PathEnd = Path->GetEndLocation();
+        const FVector::FReal DistToEndSq = FVector::DistSquared(currentLocation, PathEnd);
+        float distanceToDecelerate = 14.0f;
+        const bool shouldDecelerate = DistToEndSq < FMath::Square(distanceToDecelerate);
+
+
+        const bool isCloseToNextSegment = (currentLocation - lineEnd).Size() < 100;
+        const bool isNotLastSeg = MoveSegmentEndIndex != Path->GetPathPoints().Num() - 1;
+        const bool secondVerif = isNotLastSeg && (FMath::Acos(FVector::DotProduct((points[MoveSegmentEndIndex + 1].Location - lineEnd).GetSafeNormal(), moveDirection)) + 1 ) / 2 > 0.5;
+
+        if (shouldDecelerate || secondVerif)
+        {
+            const FVector::FReal  SpeedPct = FMath::Clamp(FMath::Sqrt(DistToEndSq) / CachedBrakingDistance, 0., 1.);
+            moveDirection *= SpeedPct;
+        }
+
+        PostProcessMove.ExecuteIfBound(this, moveDirection);
+        NavMovementInterface->RequestPathMove(moveDirection);
     }
 }
 
@@ -99,7 +135,6 @@ void USDTPathFollowingComponent::SetMoveSegment(int32 segmentStartIndex)
         PawnChar->SetActorRotation(DesiredRotation);
 
 
-        // set le temps du jump
         const FRichCurve& CurveData = PawnChar->m_JumpCurve->FloatCurve;
         const FRichCurveKey& FirstKey = CurveData.GetFirstKey();
         remainingJumpTime = FirstKey.Time;
@@ -109,8 +144,54 @@ void USDTPathFollowingComponent::SetMoveSegment(int32 segmentStartIndex)
     }
     else
     {
-        
-        
+        if (MoveSegmentEndIndex != Path->GetPathPoints().Num() - 1)
+        {
+            TArray<FVector> sampleShortcutPoints;
+
+            sampleShortcutPoints.Empty();
+            sampleShortcutPoints.Reserve(5);
+            FVector originBB = FVector::ZeroVector;
+            float radius = NavMovementInterface->GetNavAgentPropertiesRef().AgentRadius;
+            FVector extentsBB(0, 0, radius);
+            FVector destination;
+            FVector2D destination2D;
+            FVector displacementSamples = (points[MoveSegmentEndIndex].Location - segmentStart.Location) / 5;
+            for (int i = 0; i < 5; i++)
+            {
+                FVector sample = segmentStart.Location + ((i + 1) * displacementSamples);
+                sampleShortcutPoints.Push(sample);
+            }
+            for (int i = 5 - 1; i >= 0; i--)
+            {
+                FVector start = NavMovementInterface->GetFeetLocation();
+                start.Z = originBB.Z;
+                FVector end = sampleShortcutPoints[i];
+                end.Z = originBB.Z;
+                FVector sideVectorLeft = FVector::CrossProduct((end - start), FVector::UpVector);
+                sideVectorLeft.Normalize();
+                sideVectorLeft *= extentsBB.Size();
+                FVector sideVectorRight = -sideVectorLeft;
+
+                FHitResult HitOut;
+                if (!SDTUtils::Raycast(GetWorld(),
+                    start + sideVectorLeft,
+                    end + sideVectorLeft
+                )
+                    &&
+                    !SDTUtils::Raycast(GetWorld(),
+                        start + sideVectorRight,
+                        end + sideVectorRight
+                    )
+                    )
+                {
+                    destination = sampleShortcutPoints[i];
+                    destination2D = FVector2D(sampleShortcutPoints[i]);
+                    if (destination.Equals(Path->GetPathPoints()[MoveSegmentEndIndex + 1]))
+                        MoveSegmentEndIndex++;
+                    break;
+                }
+            }
+        }
     }
 }
 
