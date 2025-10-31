@@ -27,4 +27,10 @@ public:
     float remainingJumpTime;
     float zValue;
 
+
+    bool isWaitingJump = false;
+    float jumpDelay = 0.0f;
+    float waitingTime = 1.0f;
+    
+
 };

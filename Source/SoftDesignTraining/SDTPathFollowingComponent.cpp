@@ -32,7 +32,6 @@ void USDTPathFollowingComponent::FollowPathSegment(float DeltaTime)
     // If the current segment is a jump
     if (SDTUtils::HasJumpFlag(segmentStart))
     {
-        isJumping = true;
 
         APlayerController* PC = Cast<APlayerController>(GetOwner());
         if (!PC)
@@ -42,8 +41,28 @@ void USDTPathFollowingComponent::FollowPathSegment(float DeltaTime)
         if (!PawnChar)
             return;
 
+        if (isWaitingJump) {
+            jumpDelay += DeltaTime;
+            FRotator JumpRotation = (segmentEnd.Location - segmentStart.Location).GetSafeNormal().Rotation();
+            float RotationDiff = FMath::Abs(FMath::UnwindDegrees(
+                PawnChar->GetActorRotation().Yaw - JumpRotation.Yaw));
 
-        if (PawnChar->m_JumpCurve)
+
+            if (jumpDelay < waitingTime && RotationDiff > 10.f) {
+                FRotator interpRotation = FMath::RInterpTo(PawnChar->GetActorRotation(), (segmentEnd.Location - segmentStart.Location).GetSafeNormal().Rotation(), DeltaTime, 5.f);
+                PawnChar->SetActorRotation(interpRotation);
+                return;
+
+            } else {
+                jumpDelay = 0.0f;
+                isWaitingJump = false;
+                isJumping = true;
+                PawnChar->SetActorRotation(JumpRotation);
+            }
+        }
+
+
+        else if (PawnChar->m_JumpCurve)
         {
             const FRichCurve& CurveData = PawnChar->m_JumpCurve->FloatCurve;
 
@@ -67,24 +86,10 @@ void USDTPathFollowingComponent::FollowPathSegment(float DeltaTime)
     }
     else
     {
-        //Super::FollowPathSegment(DeltaTime);
         FVector lineStart(segmentStart.Location);
         FVector lineEnd(segmentEnd.Location);
-        //FVector lineDirection = lineEnd - lineStart;
-        //lineDirection.Normalize();
+       
         const FVector currentLocation = NavMovementInterface->GetFeetLocation();
-
-        //const float maxSpeed = NavMovementInterface->GetMaxSpeedForNavMovement();
-        //const float currentSpeed = GetOwner()->GetVelocity().Size();
-
-        //FVector projectedPosition = FMath::ClosestPointOnLine(lineStart, lineEnd, currentLocation);
-        //FVector destination = lineEnd;
-        //if ((currentLocation - lineEnd).Size() > 1.f) {
-        //    destination = projectedPosition + ((lineEnd - projectedPosition) / 2);
-        //}
-
-        //FVector MoveVelocity = (destination - currentLocation).GetSafeNormal() * maxSpeed;
-        //NavMovementInterface->RequestDirectMove(MoveVelocity, false);
 
      
         FVector moveDirection = (lineEnd - currentLocation).GetSafeNormal();
@@ -96,7 +101,7 @@ void USDTPathFollowingComponent::FollowPathSegment(float DeltaTime)
 
         const bool isCloseToNextSegment = (currentLocation - lineEnd).Size() < 100;
         const bool isNotLastSeg = MoveSegmentEndIndex != Path->GetPathPoints().Num() - 1;
-        const bool secondVerif = isNotLastSeg && (FMath::Acos(FVector::DotProduct((points[MoveSegmentEndIndex + 1].Location - lineEnd).GetSafeNormal(), moveDirection)) + 1 ) / 2 > 0.5;
+        const bool secondVerif = isNotLastSeg && (FMath::Acos(FVector::DotProduct((points[MoveSegmentEndIndex + 1].Location - lineEnd).GetSafeNormal(), moveDirection)) + 1 ) / 2 < 0.5;
 
         if (shouldDecelerate || secondVerif)
         {
@@ -126,13 +131,13 @@ void USDTPathFollowingComponent::SetMoveSegment(int32 segmentStartIndex)
 
     if (SDTUtils::HasJumpFlag(segmentStart) && FNavMeshNodeFlags(segmentStart.Flags).IsNavLink())
     {
-        isJumping = true;
+        isWaitingJump = true;
         APlayerController* PC = Cast<APlayerController>(GetOwner());
         ASoftDesignTrainingMainCharacter* PawnChar = Cast<ASoftDesignTrainingMainCharacter>(PC->GetPawn());
 
-        const FVector JumpDirection = (segmentEnd.Location - segmentStart.Location).GetSafeNormal();
+       /* const FVector JumpDirection = (segmentEnd.Location - segmentStart.Location).GetSafeNormal();
         FRotator DesiredRotation = JumpDirection.Rotation();
-        PawnChar->SetActorRotation(DesiredRotation);
+        PawnChar->SetActorRotation(DesiredRotation);*/
 
 
         const FRichCurve& CurveData = PawnChar->m_JumpCurve->FloatCurve;
